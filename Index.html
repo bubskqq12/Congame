@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPTCHA Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #captcha {
+            font-size: 32px;
+            font-weight: bold;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+        #captchaInput, button, #nameInput {
+            padding: 10px;
+            font-size: 18px;
+            margin: 5px;
+        }
+        #leaderboard {
+            margin-top: 30px;
+        }
+        .leaderboard-entry {
+            font-size: 18px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>CAPTCHA Game</h1>
+    <div>
+        <input type="text" id="nameInput" placeholder="Enter your name">
+        <button onclick="startGame()">Start Game</button>
+    </div>
 
+    <div id="game" class="hidden">
+        <div id="captcha">CAPTCHA will appear here</div>
+        <input type="text" id="captchaInput" placeholder="Enter CAPTCHA">
+        <button onclick="verifyCaptcha()">Submit</button>
+        <div id="result"></div>
+    </div>
+
+    <h2>Leaderboard</h2>
+    <div id="leaderboard">No entries yet.</div>
+
+    <script>
+        let generatedCaptcha;
+        let leaderboard = [];
+
+        // Basic inappropriate word filtering
+        const inappropriateWords = ["badword1", "badword2"]; // Add any inappropriate words here
+
+        function filterName(name) {
+            const lowerCaseName = name.toLowerCase();
+            for (let word of inappropriateWords) {
+                if (lowerCaseName.includes(word)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Generate a new CAPTCHA
+        function generateCaptcha() {
+            generatedCaptcha = Math.random().toString(36).substring(2, 7);
+            document.getElementById("captcha").innerText = generatedCaptcha;
+        }
+
+        // Start the game after the player enters a valid name
+        function startGame() {
+            const nameInput = document.getElementById("nameInput").value;
+
+            if (!nameInput || !filterName(nameInput)) {
+                alert("Please enter a valid name (no inappropriate words).");
+                return;
+            }
+
+            // Store the player name in local storage
+            localStorage.setItem("playerName", nameInput);
+
+            // Show the CAPTCHA and start the game
+            document.getElementById("game").classList.remove("hidden");
+            generateCaptcha();
+        }
+
+        // Verify if the CAPTCHA is correct
+        function verifyCaptcha() {
+            const input = document.getElementById("captchaInput").value;
+            const resultDiv = document.getElementById("result");
+
+            if (input === generatedCaptcha) {
+                resultDiv.innerText = "Correct! Score +1";
+                updateLeaderboard();
+            } else {
+                resultDiv.innerText = "Incorrect CAPTCHA!";
+            }
+
+            generateCaptcha(); // Generate a new CAPTCHA after each attempt
+        }
+
+        // Update the leaderboard
+        function updateLeaderboard() {
+            const playerName = localStorage.getItem("playerName");
+            let player = leaderboard.find(player => player.name === playerName);
+
+            if (player) {
+                player.score += 1;
+            } else {
+                leaderboard.push({ name: playerName, score: 1 });
+            }
+
+            // Sort leaderboard by score in descending order
+            leaderboard.sort((a, b) => b.score - a.score);
+            displayLeaderboard();
+        }
+
+        // Display the leaderboard
+        function displayLeaderboard() {
+            const leaderboardDiv = document.getElementById('leaderboard');
+            leaderboardDiv.innerHTML = '';
+            leaderboard.forEach(player => {
+                leaderboardDiv.innerHTML += `<div class="leaderboard-entry">${player.name}: ${player.score}</div>`;
+            });
+        }
+    </script>
+</body>
+</html>
